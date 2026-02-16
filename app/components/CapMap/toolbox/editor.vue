@@ -122,6 +122,7 @@ const polygonAssign = (data:any) => {
   let polygon = _polygons.value.find((it:any)=> it.id == selectedPolygon.value.id)
   if (polygon){
     polygon.hostID = data.id
+    polygon.locationID = data.locationID
     polygon.title = data.title
     polygon.data = data
   }

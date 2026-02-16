@@ -3,7 +3,7 @@ import CapModule from '#capModule';
 export default class useAPI {
     private capAPI = useCapApi();
     private appCode: string | null = CapModule.extra?.AppCode ?? null;
-    private authorization = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOiIyMWZiNDcyZC02ZTFlLTRmNTQtZmIyZC0wOGRhNmVkNmJjYzUiLCJVc2VybmFtZSI6ImVldGV6YWRpIiwianRpIjoiMTUwNTVlZGMtMzMxYi00NGMyLTg1NmQtMjc1M2VlNWJhMGJjIiwiQXBwSWQiOiIyYTdmMjRjZS1mZDVlLTQwNWMtOWE2My1mMDdlNGY2NTFjY2EiLCJSb2xlIjoiZGVmYXVsdCIsIlBlcm1pc3Npb24iOlsiVmlldyIsIlJlcG9ydFZpZXciLCJPd25lciIsIkVkaXRBZG1pbiIsIkNyZWF0ZUFkbWluIiwiVmFsaWRhdG9yIiwiRXhoaWJpdFZpc2l0b3IiLCJFeGhpYml0UmVwb3J0IiwiU3VwZXJBZG1pbiJdLCJleHAiOjE3NzEyNDQ0Njl9.QBptOJEq0blaGvoXdanN0nm7jnBTg3baA9JOKx5ihek'
+    private authorization = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOiIyMWZiNDcyZC02ZTFlLTRmNTQtZmIyZC0wOGRhNmVkNmJjYzUiLCJVc2VybmFtZSI6ImVldGV6YWRpIiwianRpIjoiNzZiNzUzOTAtZWRkNy00M2Y0LWI3YzAtYWVhM2I1NDNiZmU1IiwiQXBwSWQiOiIyYTdmMjRjZS1mZDVlLTQwNWMtOWE2My1mMDdlNGY2NTFjY2EiLCJSb2xlIjoiZGVmYXVsdCIsIlBlcm1pc3Npb24iOlsiVmlldyIsIlJlcG9ydFZpZXciLCJPd25lciIsIkVkaXRBZG1pbiIsIkNyZWF0ZUFkbWluIiwiVmFsaWRhdG9yIiwiRXhoaWJpdFZpc2l0b3IiLCJFeGhpYml0UmVwb3J0IiwiU3VwZXJBZG1pbiJdLCJleHAiOjE3NzEzMzIwNTZ9.Tvh4atMopzBES6qWdKWXaaQfMkM6dAdIaFJKjxqDYDc'
 
     public getCompanies = async (id:string = '0') => {
         try {
@@ -87,7 +87,7 @@ export default class useAPI {
             return { result: false, msg: "ERROR" };
         }
     };
-    public saveMap = async (id:string = '0',mapData:string = '') => {
+    public saveMap = async (id:string = '0',mapData:string = '',assigns:any[] = []) => {
         try {
             const api = await this.capAPI.useAPI();
             const { data } = await api({
@@ -99,7 +99,8 @@ export default class useAPI {
                 },
                 data:{
                     "exhibitId": id,
-                    "url": mapData
+                    "url": mapData,
+                    "assigns": assigns,
                 }
             });
             return { result: true, msg: "Success", data };

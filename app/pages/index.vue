@@ -63,6 +63,16 @@ const loadData = async () => {
 const onExport = async (data:any) =>{
   try{
     loading.value = true;
+    let polygonAssigns:any[] = [];
+    data.forEach((it:any)=>{
+      if (it.hostID){
+        polygonAssigns.push({
+          id : it.locationID,
+          data : it.boothCode
+        });
+      }
+    })
+
     const jsonStr = JSON.stringify(data)
     const blob = new Blob([jsonStr], { type: 'application/json' })
     const formData = new FormData()
@@ -72,7 +82,7 @@ const onExport = async (data:any) =>{
     const responseUpload = await api.upload(formData)
     if (responseUpload.result){
       let filePath = responseUpload.data.urls[0];
-      const response = await api.saveMap(exhibit.value.id,filePath)
+      const response = await api.saveMap(exhibit.value.id,filePath,polygonAssigns)
       if (response.result){
         alert('Save Success')
         loading.value = false;

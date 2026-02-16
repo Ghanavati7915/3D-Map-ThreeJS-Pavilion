@@ -9,6 +9,9 @@ import PF from "pathfinding";
 import { gsap } from 'gsap'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { Line2 } from 'three/examples/jsm/lines/Line2'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial'
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry'
 import img_map from './assets/img/map.png'
 import img_lobby from './assets/img/plan-lobby.png'
 import img_logo from './assets/img/logo-3d.png'
@@ -39,6 +42,7 @@ export interface EditorPolygon {
   id: number
   title: string
   hostID: string
+  locationID: string
   boothCode?: string   // ⬅️ جدید
   type: PolygonType
   points: THREE.Vector3[]
@@ -76,6 +80,7 @@ const BOOTH_HOVER_Y = 3.8 // وقتی موس روشه
 const BOOTH_SELECTED_Y = 4.5  // وقتی select شده
 const OPACITY_DIM = 0.3  // وقتی سایر غرفه‌ها dim شدن
 const OPACITY_NORMAL = 0.9 // حالت عادی
+
 //#region Settings
 const settings = reactive({
   showGrid: true,
@@ -83,6 +88,21 @@ const settings = reactive({
   gridStep: 1,
 })
 //#endregion
+
+//#region Line Animation
+let fullPathPoints: THREE.Vector3[] = []
+let pathProgress = 0
+let dashOffset = 0
+let animatedLine: Line2 | null = null
+let lineMaterial: LineMaterial | null = null
+let pathCurve: THREE.CatmullRomCurve3 | null = null
+let glowLine: Line2 | null = null
+let movingDot: THREE.Mesh | null = null
+let arrowGroup: THREE.Group | null = null
+
+let animationT = 0
+//#endregion
+
 
 const GRID = 1
 const CLOSE_THRESHOLD = 1.2
@@ -413,6 +433,7 @@ function startPolygon(polygonType: "booth" | "walkable") {
     title: title,
     boothCode: `PAV-${idCounter - 1}`,
     hostID: null,
+    locationID: null,
     data: null,
     color: currentPolygonType.value === 'booth' ? '#f97316' : '#22c55e',
     type: currentPolygonType.value,
@@ -770,23 +791,6 @@ function hasLineOfSight(a: number[], b: number[]) {
 
   return true
 }
-function drawLineDirect() {
-  if (!startPoint || !endPoint) return
-  const points = [startPoint.pos.clone(), endPoint.pos.clone()]
-  line = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(points),
-      new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 })
-  )
-  scene.add(line)
-
-  polygons.forEach(poly => {
-    if (lineIntersectsPolygon(startPoint.pos, endPoint.pos, poly)) {
-      console.log('✅ خط با polygon', poly.id, 'برخورد کرد')
-    } else {
-      console.log('❌ خط با polygon', poly.id, 'برخورد نکرد')
-    }
-  })
-}
 function drawLine() {
   if (!startPoint || !endPoint) return
 
@@ -802,18 +806,73 @@ function drawLine() {
   const smooth = smoothPath(path)
   const worldPoints = smooth.map(p => gridToWorld(p[0], p[1]))
 
-  const geometry = new THREE.BufferGeometry().setFromPoints(worldPoints)
-  const material = new THREE.LineDashedMaterial({
-    color: 0xff0000,
-    linewidth: 2,
-    dashSize: 2,
-    gapSize: 1,
+  // منحنی نرم
+  pathCurve = new THREE.CatmullRomCurve3(worldPoints)
+  const points = pathCurve.getPoints(200)
+
+  const positions: number[] = []
+  points.forEach(p => {
+    positions.push(p.x, p.y, p.z)
   })
 
-  if (line) scene.remove(line)
-  line = new THREE.Line(geometry, material)
-  line.computeLineDistances()
-  scene.add(line)
+  // حذف قبلی
+  if (animatedLine) scene.remove(animatedLine)
+  if (glowLine) scene.remove(glowLine)
+  if (movingDot) scene.remove(movingDot)
+  if (arrowGroup) scene.remove(arrowGroup)
+
+  // ---------- خط اصلی ----------
+  const geometry = new LineGeometry()
+  geometry.setPositions(positions)
+
+  lineMaterial = new LineMaterial({
+    color: 0xff0000,
+    linewidth: 0.006, // ضخامت واقعی (در واحد world)
+    transparent: true,
+  })
+
+  lineMaterial.resolution.set(window.innerWidth, window.innerHeight)
+
+  animatedLine = new Line2(geometry, lineMaterial)
+  animatedLine.computeLineDistances()
+  scene.add(animatedLine)
+
+  // ---------- Glow ----------
+  const glowMaterial = new LineMaterial({
+    color: 0xff4444,
+    linewidth: 0.015,
+    transparent: true,
+    opacity: 0.25,
+  })
+  glowMaterial.resolution.set(window.innerWidth, window.innerHeight)
+
+  const glowGeo = new LineGeometry()
+  glowGeo.setPositions(positions)
+
+  glowLine = new Line2(glowGeo, glowMaterial)
+  scene.add(glowLine)
+
+  // ---------- نقطه نورانی ----------
+  const dotGeo = new THREE.SphereGeometry(0.8, 16, 16)
+  const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 })
+  movingDot = new THREE.Mesh(dotGeo, dotMat)
+  scene.add(movingDot)
+
+  // ---------- فلش های متحرک ----------
+  arrowGroup = new THREE.Group()
+  const arrowGeo = new THREE.ConeGeometry(0.6, 1.8, 12)
+  const arrowMat = new THREE.MeshBasicMaterial({ color: 0x000000 })
+
+  for (let i = 0; i < 15; i++) {
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat)
+    arrow.rotation.x = Math.PI / 2
+    arrow.userData.offset = i / 15
+    arrowGroup.add(arrow)
+  }
+
+  scene.add(arrowGroup)
+
+  animationT = 0
 }
 
 /*#endregion*/
@@ -1215,7 +1274,7 @@ function handleBoothHover() {
 function selectBoothsById(ids: number[]) {
   // 1️⃣ انتخاب state
   selectedBooths.value = polygons.filter(
-      p => p.type === 'booth' && (ids.includes(p.id) || ids.includes(p.hostID))
+      p => p.type === 'booth' && (ids.includes(p.id) || ids.includes(p.hostID) || ids.includes(p.locationID))
   )
   const boothPolygons = polygons.filter(
       p => p.type === 'booth' && p.mesh && p.roof && p.border
@@ -1389,6 +1448,44 @@ function animate() {
     lastMouseMoveTime = now
   }
 
+  //#region line
+// 🔥 Path Animation
+  if (pathCurve && animatedLine && movingDot && arrowGroup) {
+
+    animationT += 0.002   // سرعت حرکت کلی
+
+    if (animationT > 1) animationT = 0
+
+    // حرکت نقطه نورانی
+    // const point = pathCurve.getPointAt(animationT)
+    // movingDot.position.copy(point)
+
+    // حرکت فلش‌ها
+    arrowGroup.children.forEach((arrow: any) => {
+
+      let t = (animationT + arrow.userData.offset) % 1
+      const pos = pathCurve!.getPointAt(t)
+      const tangent = pathCurve!.getTangentAt(t)
+
+      const floatAmplitude = 3
+      const floatSpeed = 7
+      const heightOffset = 10  // فاصله از زمین (تنظیمی)
+
+      arrow.position.set(
+          pos.x,
+          pos.y + heightOffset + Math.sin(performance.now() * 0.002 * floatSpeed + arrow.userData.offset * 10) * floatAmplitude,
+          pos.z + 2
+      )
+      arrow.position.copy(pos)
+
+      const axis = new THREE.Vector3(0, 1, 0)
+      const quaternion = new THREE.Quaternion()
+      quaternion.setFromUnitVectors(axis, tangent.clone().normalize())
+      arrow.quaternion.copy(quaternion)
+    })
+  }
+  //#endregion
+
   renderer.render(scene, camera)
 }
 
@@ -1439,6 +1536,7 @@ function exportScene() {
   const dataToSave = polygons.map(poly => ({
     id: poly.id,
     hostID: poly.hostID,
+    locationID: poly.locationID,
     title: poly.title,
     boothCode: poly.boothCode,
     type: poly.type,
@@ -1464,6 +1562,7 @@ function importScene(data: any[]) {
       const newPoly :any = {
         id: item.id,
         hostID: item.hostID,
+        locationID: item.locationID,
         title: item.title,
         boothCode: item.boothCode,
         type: item.type,

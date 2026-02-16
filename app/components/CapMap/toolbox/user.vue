@@ -152,6 +152,11 @@ defineExpose({onPolygon,onExternalSelect})
   <div class="Estedad_FD_Light">
     <!--#region Filters : Desktop-->
     <div v-if="!device.isMobile" class="flex flex-col top-3 right-3 gap-y-3 fixed w-[35dvw]">
+      <!--#region Search-->
+      <div class="rounded-lg border border-gray-200 bg-white flex justify-center items-center w-12 h-12 fixed top-5 left-5 transition all ease-in-out cursor-pointer" @click="back">
+        <Icon name="ph:caret-left" class="text-slate-800" size="20"/>
+      </div>
+      <!--#endregion-->
       <!--#region Map Title-->
       <div class="flex w-full justify-center items-center"> <span class="Estedad_FD_Bold text-sm line-clamp-2">{{props.title}}</span> </div>
       <!--#endregion-->
