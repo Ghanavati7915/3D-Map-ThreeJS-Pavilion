@@ -1,0 +1,5 @@
+@import "tailwindcss";
+body{
+    direction: rtl;
+    font-family: 'Estedad-FD-Light', Tahoma, Sans-Serif !important;
+}

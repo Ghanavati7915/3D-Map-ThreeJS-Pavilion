@@ -1,0 +1,18 @@
+/*#region Estedad FA ---------------*/
+/*Estedad-FD-Bold*/
+@font-face {
+    font-family: "Estedad-FD-Bold";
+    src: url('../fonts/Estedad/fa/Estedad-FD-Bold.ttf') format("truetype");
+}
+/*Estedad-FD-Light*/
+@font-face {
+    font-family: "Estedad-FD-Light";
+    src: url('../fonts/Estedad/fa/Estedad-FD-Light.ttf') format("truetype");
+}
+.Estedad_FD_Bold {
+    font-family: 'Estedad-FD-Bold', Tahoma, Sans-Serif !important;
+}
+.Estedad_FD_Light {
+    font-family: 'Estedad-FD-Light', Tahoma, Sans-Serif !important;
+}
+/*#endregion*/

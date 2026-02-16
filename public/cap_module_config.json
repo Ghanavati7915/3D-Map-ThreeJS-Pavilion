@@ -1,0 +1,29 @@
+{
+  "client_id": "CAPPavilion",
+  "is_multi_token": false,
+  "environment": "Development",
+  "extra": {
+    "AppCode": 17
+  },
+  "database": {
+    "version": 1,
+    "db_name": "pavilion",
+    "tables_name" : ["config","store","log","chat"]
+  },
+  "api_methods" : {
+    "user_info": "Accounts/UserInfo",
+    "authorization_by_app_code": "Accounts/AuthorizationByAppCode",
+    "refresh_token": "Accounts/RefreshToken"
+  },
+  "production" : {
+    "base_url" : "https://b.gardeshium.ir/api",
+    "redirect_uri": "https://fair.gardeshium.ir/login",
+    "sso_site_url": "https://sso.i-cap.ir"
+  },
+  "development" : {
+    "base_url" : "https://api.pavilionnetwork.ir/api",
+    "redirect_uri": "http://localhost:3000/login",
+    "sso_site_url": "https://sso.i-cap.ir"
+  }
+}
+
