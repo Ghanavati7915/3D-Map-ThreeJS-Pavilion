@@ -72,7 +72,6 @@ const onExport = async (data:any) =>{
         });
       }
     })
-return false
     const jsonStr = JSON.stringify(data)
     const blob = new Blob([jsonStr], { type: 'application/json' })
     const formData = new FormData()
