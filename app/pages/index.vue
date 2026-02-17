@@ -15,7 +15,7 @@ const exhibit = ref<any>({
   workFields:[],
   companies:[]
 })
-const viewMode = ref<boolean>(true)
+const viewMode = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const mapData = ref<any>(null);
 //#endregion
@@ -67,12 +67,12 @@ const onExport = async (data:any) =>{
     data.forEach((it:any)=>{
       if (it.hostID){
         polygonAssigns.push({
-          id : it.locationID,
+          id : it.hostID,
           data : it.boothCode
         });
       }
     })
-
+return false
     const jsonStr = JSON.stringify(data)
     const blob = new Blob([jsonStr], { type: 'application/json' })
     const formData = new FormData()
